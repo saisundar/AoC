@@ -2,18 +2,28 @@
 https://adventofcode.com/2023/day/1
 """
 
+import re
 
-def load_from_file(file_name):
-    with open("input.txt", "r") as f:
+INPUTS_PATH = "/Users/saisundarraghavan/github/AoC/2023/inputs/"
+mock_file = False
+
+
+def load_from_file(file_name="input1.txt"):
+    if mock_file:
+        return """two1nine
+        eightwothree
+        abcone2threexyz
+        xtwone3four
+        4nineeightseven2
+        zoneight234
+        7pqrstsixteen""".splitlines()
+    with open(INPUTS_PATH + file_name) as f:
         content = f.read().splitlines()
 
     return content
 
 
 def reduce_each_line(line):
-    if line == "":
-        return 0
-
     numbers_in_words = {
         "one": 1,
         "two": 2,
@@ -26,36 +36,22 @@ def reduce_each_line(line):
         "nine": 9,
     }
 
-    word_maps = {}
-    result = 0
-    for word in numbers_in_words.keys():
-        try:
-            if line.find(word) != -1:
-                word_maps[line.find(word)] = numbers_in_words[word]
-            if line.rfind(word) != -1:
-                word_maps[line.rfind(word)] = numbers_in_words[word]
-        except ValueError as e:
-            pass
-
-    for index in range(len(line)):
-        c = line[index]
-        if c.isdigit():
-            word_maps[index] = int(c)
-    result += (word_maps[min(word_maps.keys())] * 10) + word_maps[max(word_maps.keys())]
-    return result
+    pattern = r"(" + "|".join(numbers_in_words.keys()) + r"|\d)"
+    regex = re.compile(pattern)
+    word_maps = {
+        m.start(): (
+            int(m.group()) if len(m.group()) == 1 else numbers_in_words[m.group()]
+        )
+        for m in regex.finditer(line)
+    }
+    return (word_maps[min(word_maps.keys())] * 10) + word_maps[max(word_maps.keys())]
 
 
 def get_final_answer():
-    file_name = ""
-
-    list_of_lines = load_from_file(file_name)
-    result = 0
-
-    for line in list_of_lines:
-        result += reduce_each_line(line)
-
-    return result
+    result = [reduce_each_line(line) for line in load_from_file()]
+    print(len(result))
+    return sum(result)
 
 
 if __name__ == "__main__":
-    print(get_final_answer())
+    assert get_final_answer() == 53894, f"{get_final_answer()} != 53894"
